@@ -14,13 +14,15 @@ async function createPartitionIfNotExists(pool: Pool, date: Date): Promise<void>
   const rangeEnd = new Date(rangeStart);
   rangeEnd.setUTCDate(rangeEnd.getUTCDate() + 1);
 
+  const startLiteral = rangeStart.toISOString();
+  const endLiteral = rangeEnd.toISOString();
+
   await pool.query(`
     CREATE TABLE IF NOT EXISTS ${partitionName}
     PARTITION OF logs
-    FOR VALUES FROM ($1) TO ($2);
-  `, [rangeStart.toISOString(), rangeEnd.toISOString()]);
+    FOR VALUES FROM ('${startLiteral}') TO ('${endLiteral}');
+  `);
 }
-
 export async function ensurePartitions(pool: Pool, daysAhead = 3): Promise<void> {
   const today = new Date();
 
