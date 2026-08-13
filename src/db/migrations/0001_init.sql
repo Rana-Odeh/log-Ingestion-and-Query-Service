@@ -25,3 +25,5 @@ CREATE INDEX idx_logs_attributes ON logs USING GIN (attributes);
 
 
 CREATE INDEX idx_logs_message_trgm ON logs USING GIN (message gin_trgm_ops);
+
+ 

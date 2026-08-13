@@ -3,6 +3,7 @@ import { pool } from './db/client.js';
 import { runMigrations } from './db/migrate.js';
 import { ensurePartitions } from './db/partitions.js';
 import { registerIngestRoute } from './routes/ingest.js';
+import { registerQueryRoute } from './routes/logsQuery.js';
 let isReady = false;
 const fastify = Fastify({ logger: true });
 
@@ -27,6 +28,7 @@ async function start(): Promise<void> {
       });
     }, 6 * 60 * 60 * 1000);
     fastify.register(registerIngestRoute);
+    fastify.register(registerQueryRoute);
 
     const port = Number(process.env.PORT ?? 8080);
     await fastify.listen({ port, host: '0.0.0.0' });

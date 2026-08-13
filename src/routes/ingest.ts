@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import { validateLogEntry } from '../validation/logEntry.js';
-import { insertValidatedEntries } from '../db/queries/insertLogs.js';
+import { insertValidatedEntries } from '../db/insertLogs.js';
 import type { RequestLogEntry, RejectedEntry, ValidatedLogEntry } from '../types/logEntry.js';
 
 type IngestRequestBody = {
