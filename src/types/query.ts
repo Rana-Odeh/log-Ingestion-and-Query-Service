@@ -3,25 +3,29 @@ import type { LogLevel } from './logEntry.js';
 export interface LogFilters {
   service?: string;
   level?: LogLevel;
-  since?: Date;
-  until?: Date;
   attributes: Record<string, string>;
   q?: string;
 }
 
 export interface LogParams extends LogFilters {
+  since?: Date;
+  until?: Date;
   limit: number;
   cursor?: Cursor;
 }
-export  interface RawQuery {
+//***** 
+export interface RawSharedFilters {
   service?: string;
   level?: string;
+  q?: string;
+  [key: `attr.${string}`]: string | undefined;
+}
+
+export  interface RawQuery extends RawSharedFilters {
   since?: string;
   until?: string;
-  q?: string;
   limit?: string;
   cursor?: string;
-  [key: `attr.${string}`]: string | undefined;
 }
 
 export interface Cursor {

@@ -1,31 +1,17 @@
 import { db } from '../db/client.js';
 import { logs } from '../db/schema.js';
-import { and, desc, eq, gte, lt, sql, type SQL } from 'drizzle-orm';
+import { sql,and, desc, gte, lt} from 'drizzle-orm';
 import type { LogParams, LogResponse, LogResponseItem } from '../types/query.js';
 import { encodeCursor } from './cursor.js';
+import {buildSharedConditions} from './sharedConditions.js';
 
 export async function getLogs(params: LogParams): Promise<LogResponse> {
-  const filters: SQL[] = [];
-
-  if (params.service) {
-    filters.push(eq(logs.service, params.service));
-  }
-  if (params.level) {
-    filters.push(eq(logs.level, params.level));
-  }
+  const filters = buildSharedConditions(params);
   if (params.since) {
     filters.push(gte(logs.timestamp, params.since));
   }
-
   if (params.until) {
     filters.push(lt(logs.timestamp, params.until));
-  }
-  for (const [key, value] of Object.entries(params.attributes)) {
-    filters.push(sql`${logs.attributes} ->> ${key} = ${value}`);
-  }
-
-  if (params.q) {
-    filters.push(sql`${logs.message} ILIKE ${'%' + params.q + '%'}`);
   }
 
   if (params.cursor) {
@@ -33,7 +19,6 @@ export async function getLogs(params: LogParams): Promise<LogResponse> {
       sql`(${logs.timestamp}, ${logs.id}) < (${params.cursor.timestamp}::timestamptz, ${params.cursor.id}::uuid)`
     );
   }
-
   const Search = filters.length > 0 ? and(...filters) : undefined;
 
   const rows = await db

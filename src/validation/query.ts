@@ -1,20 +1,17 @@
-import type { LogLevel } from '../types/logEntry.js';
 import type { Cursor } from '../types/query.js';
 import { decodeCursor } from '../query-builder/cursor.js';
 import type { LogParams ,RawQuery } from '../types/query.js';
-const VALID_LEVELS: LogLevel[] = ['debug', 'info', 'warn', 'error'];
+import { validateSharedFilters } from './sharedFilters.js';
 const DEFAULT_LIMIT = 100;
 const MAX_LIMIT = 1000;
-
 
 export type QueryValidationResult =
   | { valid: true; params: LogParams }
   | { valid: false; reason: string };
 
 export function validateQueryParams(raw: RawQuery): QueryValidationResult {
-  if (raw.level !== undefined && !VALID_LEVELS.includes(raw.level as LogLevel)) {
-    return { valid: false, reason: `invalid level: '${raw.level}'` };
-  }
+  const shared = validateSharedFilters(raw);
+  if (!shared.valid) return shared;
 
   let since: Date | undefined;
   if (raw.since !== undefined) {
@@ -48,7 +45,7 @@ export function validateQueryParams(raw: RawQuery): QueryValidationResult {
     limit = parsed;
   }
 
-  let cursor: Cursor | undefined;
+  let cursor: Cursor| undefined;
   if (raw.cursor !== undefined) {
     const decoded = decodeCursor(raw.cursor);
     if (decoded === null) {
@@ -57,23 +54,8 @@ export function validateQueryParams(raw: RawQuery): QueryValidationResult {
     cursor = decoded;
   }
 
-  const attributes: Record<string, string> = {};
-  for (const [key, value] of Object.entries(raw)) {
-    if (key.startsWith('attr.') && typeof value === 'string') {
-      attributes[key.slice('attr.'.length)] = value;
-    }
-  }
   return {
     valid: true,
-    params: {
-      service: raw.service,
-      level: raw.level as LogLevel | undefined,
-      since,
-      until,
-      attributes,
-      q: raw.q,
-      limit,
-      cursor,
-    },
+    params: { ...shared.filters, since, until, limit, cursor },
   };
 }
