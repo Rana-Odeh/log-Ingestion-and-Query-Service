@@ -1,20 +1,10 @@
-import Fastify from 'fastify';
 import { pool } from './db/client.js';
 import { runMigrations } from './db/migrate.js';
 import { ensurePartitions } from './db/partitions.js';
-import { registerIngestRoute } from './routes/ingest.js';
-import { registerQueryRoute } from './routes/logsQuery.js';
-import { registerAggregateRoute } from './routes/aggregate.js';
+import { startPartitionMaintenanceJob } from './jobs/partitionMaintenance.js';
+import { buildApp } from './app.js';
 
-let isReady = false;
-const fastify = Fastify({ logger: true });
-
-fastify.get('/health', async function handler (_request, reply) {
-  if (!isReady) {
-    return reply.code(503).send({ status: 'not ready' });
-  }
-  return reply.code(200).send({ status: 'ok' });
-});
+const { fastify, setReady } = buildApp();
 
 async function start(): Promise<void> {
   try {
@@ -22,19 +12,25 @@ async function start(): Promise<void> {
     await runMigrations(pool);
     await ensurePartitions(pool);
 
-    isReady = true;
+    const stopPartitionJob = startPartitionMaintenanceJob(pool);
 
-    setInterval(() => {
-      ensurePartitions(pool).catch((err) => {
-        fastify.log.error(err, 'failed to ensure future partitions');
-      });
-    }, 6 * 60 * 60 * 1000);
-    fastify.register(registerIngestRoute);
-    fastify.register(registerQueryRoute);
-    fastify.register(registerAggregateRoute);
+    setReady();
 
     const port = Number(process.env.PORT ?? 8080);
-    await fastify.listen({ port, host: '0.0.0.0' });
+
+    await fastify.listen({
+      port,
+      host: '0.0.0.0',
+    });
+
+    const shutdown = async () => {
+      stopPartitionJob();
+      await fastify.close();
+      await pool.end();
+    };
+
+    process.once('SIGINT', shutdown);
+    process.once('SIGTERM', shutdown);
   } catch (err) {
     fastify.log.error(err, 'startup failed');
     process.exit(1);

@@ -14,11 +14,8 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
-    deploy:
-      resources:
-        limits:
-          cpus: "1.0"
-          memory: 1024M
+    cpus: 1.0
+    mem_limit: 1024m
 
   app:
     build: .
@@ -30,11 +27,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    deploy:
-      resources:
-        limits:
-          cpus: "0.5"
-          memory: 256M
-
+    cpus: 0.5
+    mem_limit: 256m
 volumes:
   pgdata:

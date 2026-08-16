@@ -1,5 +1,5 @@
 import type { Cursor } from '../types/query.js';
-import { decodeCursor } from '../query-builder/cursor.js';
+import { decodeCursor } from '../utils/cursor.js';
 import type { LogParams ,RawQuery } from '../types/query.js';
 import { validateSharedFilters } from './sharedFilters.js';
 const DEFAULT_LIMIT = 100;
