@@ -3,6 +3,7 @@ import { runMigrations } from './db/migrate.js';
 import { ensurePartitions } from './db/partitions.js';
 import { startPartitionMaintenanceJob } from './jobs/partitionMaintenance.js';
 import { buildApp } from './app.js';
+import { startRetentionJob } from './jobs/retentionCleanup.js';
 
 const { fastify, setReady } = buildApp();
 
@@ -13,6 +14,7 @@ async function start(): Promise<void> {
     await ensurePartitions(pool);
 
     const stopPartitionJob = startPartitionMaintenanceJob(pool);
+    const stopRetentionJob = startRetentionJob(pool);
 
     setReady();
 
@@ -23,10 +25,12 @@ async function start(): Promise<void> {
       host: '0.0.0.0',
     });
 
-    const shutdown = async () => {
-      stopPartitionJob();
-      await fastify.close();
-      await pool.end();
+   const shutdown = async () => {
+    stopPartitionJob();
+    stopRetentionJob();
+    await fastify.close();
+    await pool.end();
+
     };
 
     process.once('SIGINT', shutdown);
