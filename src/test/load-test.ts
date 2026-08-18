@@ -5,6 +5,7 @@ const BASE_URL = process.env.LOAD_TEST_URL ?? 'http://localhost:8080';
 const BATCH_SIZE = Number(process.env.BATCH_SIZE ?? 100);
 const CONCURRENCY = Number(process.env.CONCURRENCY ?? 20);
 const DURATION_SEC = Number(process.env.DURATION_SEC ?? 30);
+const TARGET_ROWS = process.env.TARGET_ROWS ? Number(process.env.TARGET_ROWS) : undefined;
 
 type RequestResult = {
   ok: boolean;
@@ -105,7 +106,11 @@ async function worker(
   stopAt: number,
   stats: Stats,
 ): Promise<void> {
+ 
   while (performance.now() < stopAt) {
+    if (TARGET_ROWS !== undefined && stats.totalAccepted >= TARGET_ROWS) {
+      break;
+    }
     const result = await sendBatch();
 
     stats.totalRequests++;
@@ -232,6 +237,9 @@ async function main(): Promise<void> {
   console.log(`Batch size:            ${BATCH_SIZE}`);
   console.log(`Concurrency:           ${CONCURRENCY}`);
   console.log(`Duration:              ${DURATION_SEC}s`);
+if (TARGET_ROWS !== undefined) {
+  console.log(`Target rows:           ${TARGET_ROWS}`);
+}
 
   console.log('\nStarting load test...\n');
 
