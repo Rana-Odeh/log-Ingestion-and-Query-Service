@@ -6,7 +6,7 @@ import { buildApp } from './app.js';
 import { startRetentionJob } from './jobs/retentionCleanup.js';
 
 const { fastify, setReady } = buildApp();
-
+// import { startAggregationJob } from "./jobs/aggregateLogs.js";
 async function start(): Promise<void> {
   try {
     await pool.query('SELECT 1');
@@ -15,6 +15,7 @@ async function start(): Promise<void> {
 
     const stopPartitionJob = startPartitionMaintenanceJob(pool);
     const stopRetentionJob = startRetentionJob(pool);
+    //startAggregationJob();
 
     setReady();
 

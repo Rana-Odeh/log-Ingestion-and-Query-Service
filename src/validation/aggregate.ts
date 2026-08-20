@@ -30,10 +30,9 @@ export function validateAggregateParams(raw: RawAggregateQuery): AggregateValida
     return { valid: false, reason: `invalid timestamp for 'until': '${raw.until}'` };
   }
 
-  if (until.getTime() < since.getTime()) {
-    return { valid: false, reason: "'until' must not be earlier than 'since'" };
+  if (until.getTime() <= since.getTime()) {
+  return { valid: false, reason: "'until' must be later than 'since'" };
   }
-
   if (raw.bucket === undefined) {
     return { valid: false, reason: "'bucket' is required" };
   }

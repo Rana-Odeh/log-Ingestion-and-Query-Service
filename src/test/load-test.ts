@@ -7,6 +7,13 @@ const CONCURRENCY = Number(process.env.CONCURRENCY ?? 20);
 const DURATION_SEC = Number(process.env.DURATION_SEC ?? 30);
 const TARGET_ROWS = process.env.TARGET_ROWS ? Number(process.env.TARGET_ROWS) : undefined;
 
+function randomTimestampInLastMonth(): string {
+  const now = Date.now();
+  const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
+  const randomOffset = Math.random() * thirtyDaysMs;
+  return new Date(now - randomOffset).toISOString();
+}
+
 type RequestResult = {
   ok: boolean;
   accepted: number;
@@ -42,7 +49,7 @@ function randomLogEntry() {
   const services = ['checkout', 'auth', 'payments', 'shipping'];
 
   return {
-    timestamp: new Date().toISOString(),
+   timestamp: new Date().toISOString(),
     level: levels[Math.floor(Math.random() * levels.length)],
     service: services[Math.floor(Math.random() * services.length)],
     message: `test message ${Math.random().toString(36).slice(2)}`,

@@ -1,5 +1,6 @@
 import Fastify from 'fastify';
 import { registerLogsRoutes } from './routes/logs.routes.js';
+import { pool } from './db/client.js';
 
 export function buildApp() {
   const fastify = Fastify({ logger: true });
@@ -11,10 +12,21 @@ export function buildApp() {
       return reply.code(503).send({ status: 'not ready' });
     }
 
-    return reply.code(200).send({ status: 'ok' });
+    try {
+      await pool.query('SELECT 1');
+
+      return reply.code(200).send({ status: 'ok' });
+    } catch (error) {
+      fastify.log.error(error, 'Database health check failed');
+
+      return reply.code(503).send({
+        status: 'not ready',
+        reason: 'database unavailable',
+      });
+    }
   });
 
-fastify.register(registerLogsRoutes);
+  fastify.register(registerLogsRoutes);
 
   return {
     fastify,

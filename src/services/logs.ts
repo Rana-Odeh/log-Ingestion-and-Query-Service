@@ -15,7 +15,7 @@ import type {
   AggregateParams,
   AggregateResponse,
 } from '../types/aggregate.js';
-import { insertLogs, findLogs, aggregateLogs } from '../repositories/logs.js';
+import { findLogs, aggregateLogs ,insertLogs} from '../repositories/logs.js';
 
 export async function ingestLogs(
   rawEntries: RequestLogEntry[],
